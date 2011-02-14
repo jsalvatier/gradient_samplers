@@ -6,12 +6,19 @@ Created on Feb 13, 2011
 import numpy as np
 import pymc as pm
 from multistep import MultiStep
+from find_mode import find_mode
 
 class HMCStep(MultiStep):
     
-    def __init__(self, stochastics,covariance, leapfrog_size = .3, leapfrog_n = 7, verbose = 0, tally = True  ):
+    def __init__(self, stochastics,covariance = None, leapfrog_size = .3, leapfrog_n = 7, verbose = 0, tally = True  ):
         MultiStep.__init__(self, stochastics, verbose, tally)
         
+        _, inv_covariance = find_mode(self)
+        self.accept()
+        
+        if covariance is None:
+            covariance = np.linalg.inv(inv_covariance)
+            
         self.covariance = covariance
         self.inv_covariance = np.linalg.inv(covariance)
         self.leapfrog_size = leapfrog_size

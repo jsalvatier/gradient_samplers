@@ -7,7 +7,7 @@ import numpy as np
 import pymc as pm
 from scipy.optimize import fmin_bfgs
 
-def find_mode(step_method):
+def find_mode(step_method, disp = True):
     def logp(x):
         step_method.consider(x) 
         try:
@@ -25,7 +25,7 @@ def find_mode(step_method):
         
         return -step_method.logp_grads
     
-    results = fmin_bfgs(logp, step_method.vector, grad_logp, disp = True, full_output = True)
+    results = fmin_bfgs(logp, step_method.vector, grad_logp, disp = disp, full_output = True)
     
     return results[0], results[3]
         
