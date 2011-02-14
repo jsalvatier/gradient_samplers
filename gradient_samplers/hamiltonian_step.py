@@ -15,17 +15,20 @@ class HMCStep(MultiStep):
     def __init__(self, stochastics,covariance = None, leapfrog_size = .3, leapfrog_n = 7, verbose = 0, tally = True  ):
         MultiStep.__init__(self, stochastics, verbose, tally)
         
-        _, inv_covariance = find_mode(self)
+        _, inv_hessian = find_mode(self)
         self.accept()
         
         if covariance is None:
-            covariance = np.linalg.inv(inv_covariance)
+            covariance  = inv_hessian
             
         self.covariance = covariance
         self.inv_covariance = np.linalg.inv(covariance)
         self.leapfrog_size = leapfrog_size
         self.leapfrog_n = leapfrog_n 
         self.zero = np.zeros(self.dimensions)
+        
+        self._metrop_ratios = []
+        print self.vector
     
     
     def step(self):
@@ -48,6 +51,7 @@ class HMCStep(MultiStep):
         p = -p 
             
         log_metrop_ratio = (-startp) - (-self.logp_plus_loglike) + self.kenergy(start_p) - self.kenergy(p)
+        self._metrop_ratios.append(log_metrop_ratio)
         
         if (np.isfinite(log_metrop_ratio) and 
             np.log(np.random.uniform()) < log_metrop_ratio):
@@ -59,4 +63,8 @@ class HMCStep(MultiStep):
     
     def kenergy (self, x):
         return .5 * np.dot(x,np.dot(self.covariance, x))
+    
+    @property
+    def log_metrop_ratios(self):
+        return np.array(self._metrop_ratios)
         

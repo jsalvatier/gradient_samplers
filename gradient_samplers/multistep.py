@@ -46,9 +46,12 @@ class MultiStep(pm.StepMethod):
     def propose(self, proposal_vector):
 
         for stochastic in self.stochastics:
-
-            stochastic.value = np.reshape(proposal_vector[self.slices[str(stochastic)]],  np.shape(stochastic.value))
+            proposal_value = proposal_vector[self.slices[str(stochastic)]]
             
+            if np.size(proposal_value) > 1:
+                proposal_value = np.reshape(proposal_value,  np.shape(stochastic.value))
+            
+            stochastic.value = proposal_value
             
     def revert (self):
         for stochastic in self.stochastics:
