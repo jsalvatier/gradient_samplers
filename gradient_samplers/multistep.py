@@ -7,6 +7,7 @@ from __future__ import division
 import pymc as pm
 import numpy as np
 
+__all__ = ['MultiStep']
 
 class MultiStep(pm.StepMethod):
     
@@ -25,13 +26,14 @@ class MultiStep(pm.StepMethod):
            
     @property 
     def vector(self):
-        vector = np.zeros(self._container.dimensions)
+        vector = np.empty(self.dimensions)
         
         for stochastic in self.stochastics:
             vector[self.slices[str(stochastic)]] = np.ravel(stochastic.value)
             
         return vector  
     
+    @property
     def gradients_vector(self):
         
         grad_logp = np.zeros(self.dimensions)
@@ -44,12 +46,8 @@ class MultiStep(pm.StepMethod):
     def propose(self, proposal_vector):
 
         for stochastic in self.stochastics:
-            proposed_value = proposal_vector[self.slices[str(stochastic)]]
-            
-            if iterable(stochastic.value):
-                proposed_value = np.reshape(proposed_value,np.shape(stochastic.value))
 
-            stochastic.value = proposed_value
+            stochastic.value = np.reshape(proposal_vector[self.slices[str(stochastic)]],  np.shape(stochastic.value))
             
             
     def revert (self):
