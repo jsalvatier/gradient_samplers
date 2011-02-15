@@ -50,21 +50,25 @@ class HMCStep(MultiStep):
         
         p = -p 
             
-        log_metrop_ratio = (-startp) - (-self.logp_plus_loglike) + self.kenergy(start_p) - self.kenergy(p)
-        self._metrop_ratios.append(log_metrop_ratio)
-        
-        if (np.isfinite(log_metrop_ratio) and 
-            np.log(np.random.uniform()) < log_metrop_ratio):
+        try: 
+            log_metrop_ratio = (-startp) - (-self.logp_plus_loglike) + self.kenergy(start_p) - self.kenergy(p)
+            self._metrop_ratios.append(log_metrop_ratio)
             
-            self.accept()
-        else: 
-            self.reject() 
+            if (np.isfinite(log_metrop_ratio) and 
+                np.log(np.random.uniform()) < log_metrop_ratio):
+                
+                self.accept()
+            else: 
+                self.reject() 
+                
+        except pm.ZeroProbability:
+            self.reject()    
             
     
     def kenergy (self, x):
         return .5 * np.dot(x,np.dot(self.covariance, x))
     
     @property
-    def log_metrop_ratios(self):
-        return np.array(self._metrop_ratios)
+    def accept_ratios(self):
+        return np.array(np.minimum(np.exp(self._metrop_ratios), 1))
         

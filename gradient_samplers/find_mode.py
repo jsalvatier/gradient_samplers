@@ -23,7 +23,7 @@ def find_mode(step_method, disp = True):
         try:
             step_method.logp_plus_loglike 
         except pm.ZeroProbability:
-            return step_method.zero
+            return np.zeros(step_method.dimensions)
         
         return -step_method.gradients_vector
     

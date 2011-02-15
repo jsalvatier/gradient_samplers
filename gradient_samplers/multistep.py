@@ -36,7 +36,7 @@ class MultiStep(pm.StepMethod):
     @property
     def gradients_vector(self):
         
-        grad_logp = np.zeros(self.dimensions)
+        grad_logp = np.empty(self.dimensions)
         for stochastic, logp_gradient in self.logp_gradient.iteritems():
                 
             grad_logp[self.slices[str(stochastic)]] = np.ravel(logp_gradient)  
