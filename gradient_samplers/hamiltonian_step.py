@@ -11,7 +11,11 @@ from find_mode import find_mode
 __all__ = ['HMCStep']
 
 class HMCStep(MultiStep):
+    """
+    Hamiltonian MCMC step method. 
     
+    Based off Radford's review paper of the subject. Available here http://www.cs.utoronto.ca/~radford/ham-mcmc.abstract.html
+    """
     def __init__(self, stochastics,covariance = None, leapfrog_size = .3, leapfrog_n = 7, verbose = 0, tally = True  ):
         MultiStep.__init__(self, stochastics, verbose, tally)
         
@@ -28,7 +32,6 @@ class HMCStep(MultiStep):
         self.zero = np.zeros(self.dimensions)
         
         self._metrop_ratios = []
-        print self.vector
     
     
     def step(self):
