@@ -11,6 +11,9 @@ from find_mode import find_mode
 __all__ = ['HMCStep']
 
 class HMCStep(MultiStep):
+    """step method based on Hamiltonian dynamics. Primarily based off http://www.cs.utoronto.ca/~radford/ham-mcmc.abstract.html
+    
+    """
     
     def __init__(self, stochastics,covariance = None, leapfrog_size = .3, leapfrog_n = 7, verbose = 0, tally = True  ):
         MultiStep.__init__(self, stochastics, verbose, tally)
