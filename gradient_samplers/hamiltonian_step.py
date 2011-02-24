@@ -16,7 +16,27 @@ class HMCStep(MultiStep):
     
     Based off Radford's review paper of the subject. Available here http://www.cs.utoronto.ca/~radford/ham-mcmc.abstract.html
     """
-    def __init__(self, stochastics,covariance = None, leapfrog_size = .3, leapfrog_n = 7, verbose = 0, tally = True  ):
+    def __init__(self, stochastics,step_count = 6, trajectory_length = 2., covariance = None, find_mode = True, verbose = 0, tally = True  ):
+        """
+        Parameters
+        ----------
+        stochastics : iterable of stochastics
+            the stochastics that should use this HMCStep
+        step_size : float
+            number of steps each trajectory should take
+        step_size : float
+            how far each HMC step should travel (think in terms of standard deviations
+        covariance : (ndim , ndim) ndarray (where ndim is the total number of variables)
+            covariance matrix for the HMC sampler to use. If None then will be estimated using the inverse hessian at the mode
+        find_mode : bool
+            whether to start the chain at the local minima of the distribution
+        verbose : int
+        tally : bool
+    
+        Returns
+        -------
+            None  : None 
+        """
         MultiStep.__init__(self, stochastics, verbose, tally)
         
         _, inv_hessian = find_mode(self)
@@ -27,8 +47,8 @@ class HMCStep(MultiStep):
             
         self.covariance = covariance
         self.inv_covariance = np.linalg.inv(covariance)
-        self.leapfrog_size = leapfrog_size
-        self.leapfrog_n = leapfrog_n 
+        self.step_size = trajectory_length/step_count
+        self.step_count = step_count
         self.zero = np.zeros(self.dimensions)
         
         self._metrop_ratios = []
@@ -40,16 +60,16 @@ class HMCStep(MultiStep):
         p = np.random.multivariate_normal(mean = self.zero ,cov = self.inv_covariance)
         start_p = p
         
-        p = p - (self.leapfrog_size/2) * (-self.gradients_vector)
+        p = p - (self.step_size/2) * (-self.gradients_vector)
         
-        for i in range(self.leapfrog_n): 
+        for i in range(self.step_count): 
             
-            self.consider(self.vector + self.leapfrog_size * np.dot(self.covariance, p))
+            self.consider(self.vector + self.step_size * np.dot(self.covariance, p))
             
-            if i != self.leapfrog_n - 1:
-                p = p - self.leapfrog_size * (-self.gradients_vector)
+            if i != self.step_count - 1:
+                p = p - self.step_size * (-self.gradients_vector)
              
-        p = p - (self.leapfrog_size/2) * (-self.gradients_vector)   
+        p = p - (self.step_size/2) * (-self.gradients_vector)   
         
         p = -p 
             

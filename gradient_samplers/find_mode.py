@@ -33,4 +33,3 @@ def find_mode(step_method, disp = True):
     results = fmin_bfgs(logp, step_method.vector, grad_logp, disp = disp, full_output = True)
     
     return results[0], results[3]
-        
