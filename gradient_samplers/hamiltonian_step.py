@@ -39,11 +39,15 @@ class HMCStep(MultiStep):
         """
         MultiStep.__init__(self, stochastics, verbose, tally)
         
-        _, inv_hessian = find_mode(self)
+        if find_mode:
+            _, inv_hessian = find_mode(self)
         self.accept()
         
         if covariance is None:
-            covariance  = inv_hessian
+            if find_mode:
+                covariance  = inv_hessian
+            else 
+                raise ValueError("can't estimate covariance without finding the mode")
             
         self.covariance = covariance
         self.inv_covariance = np.linalg.inv(covariance)
