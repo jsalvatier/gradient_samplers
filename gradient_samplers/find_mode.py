@@ -30,6 +30,6 @@ def find_mode(step_method, disp = True):
     
     #fmin_ncg(logp, step_method.vector, grad_logp, disp = disp)
     
-    results = fmin_bfgs(logp, step_method.vector, grad_logp, disp = disp, full_output = True)
+    results = fmin_bfgs(logp, step_method.vector, grad_logp, disp = True, full_output = True)
     
     return results[0], results[3]
