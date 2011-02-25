@@ -13,17 +13,10 @@ class MultiStep(pm.StepMethod):
     
     
     def __init__(self, stochastics, verbose = 0, tally = True):
-        
+        pm.StepMethod.__init__(self, stochastics,verbose, tally=tally)
+                
         self.slices, self.dimensions = vectorize_stochastics(stochastics)
-        
-        # Initialize superclass
-        pm.StepMethod.__init__(self, stochastics, tally=tally)
-        
-        if verbose is not None:
-            self.verbose = verbose
-        else:
-            self.verbose = stochastic.verbose 
-           
+      
     @property 
     def vector(self):
         vector = np.empty(self.dimensions)
