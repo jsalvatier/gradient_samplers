@@ -10,8 +10,29 @@ import numpy as np
 __all__ = ['MultiStep']
 
 class MultiStep(pm.StepMethod):
+    """
+    Base class for multi-stochastic step methods. Gives the values of 
+    the stochastics a single ordered representation.
     
-    
+    Properties: 
+        vector : ndarray(dimensions)
+            the values of all the stochastics given in a standard 1-d format.
+        
+        gradients_vector : ndarray(dimensions)
+            vector of the log posterior with respect to each variable;
+            standard format. 
+        slices : dict(string, slice)
+            describes the standard format. Indexed by stochastic name.
+        dimensions : int 
+            the total number of values in the stochastics.
+        
+    Methods:
+        consider(vector): sets the values to the vector. Must be accepted or
+            rejected to count, otherwise the next consider() will simply 
+            override the current value without recording anything. 
+        accept(): 
+        reject(): 
+    """
     def __init__(self, stochastics, verbose = 0, tally = True):
         pm.StepMethod.__init__(self, stochastics,verbose, tally=tally)
                 
@@ -35,17 +56,7 @@ class MultiStep(pm.StepMethod):
             grad_logp[self.slices[str(stochastic)]] = np.ravel(logp_gradient)  
 
         return grad_logp
-
-    def propose(self, proposal_vector):
-
-        for stochastic in self.stochastics:
-            proposal_value = proposal_vector[self.slices[str(stochastic)]]
-            
-            if np.size(proposal_value) > 1:
-                proposal_value = np.reshape(proposal_value,  np.shape(stochastic.value))
-            
-            stochastic.value = proposal_value
-            
+         
     def revert (self):
         for stochastic in self.stochastics:
             stochastic.revert()
@@ -63,7 +74,13 @@ class MultiStep(pm.StepMethod):
         if self.under_consideration:
             self.revert()
             
-        self.propose(vector)   
+        for stochastic in self.stochastics:
+            proposal_value = vector[self.slices[str(stochastic)]]
+            
+            if np.size(proposal_value) > 1:
+                proposal_value = np.reshape(proposal_value,  np.shape(stochastic.value))
+            
+            stochastic.value = proposal_value   
         
         self.under_consideration = True
         
@@ -74,7 +91,7 @@ def vectorize_stochastics(stochastics):
     dimensions = 0
     slices = {}
     
-    for s in stochastics:
+    for s in set(stochastics):
         
         if isinstance(s.value, np.matrix):
             p_len = len(s.value.A.ravel())
