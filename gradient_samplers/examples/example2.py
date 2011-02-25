@@ -41,7 +41,8 @@ model = (sd, a, b)
 
 #fit
 M = pymc.MCMC(model)
-M.use_step_method(gs.HMCStep, model) #compare to without HMCStep
+#M.use_step_method(gs.HMCStep, model) #compare to without HMCStep
+M.use_step_method(pymc.AdaptiveMetropolis, model) #compare to without HMCStep
 M.isample(iter=2000, burn=0, thin=1)
 
 #plot

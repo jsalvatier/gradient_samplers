@@ -15,10 +15,8 @@ class HMCStep(MultiStep):
     Hamiltonian MCMC step method. 
     
     Based off Radford's review paper of the subject. Available here http://www.cs.utoronto.ca/~radford/ham-mcmc.abstract.html
-    """
-    def __init__(self, stochastics,step_count = 6, trajectory_length = 2., covariance = None, find_mode = True, verbose = 0, tally = True  ):
-        """
-        Parameters
+    
+    Parameters
         ----------
         stochastics : iterable of stochastics
             the stochastics that should use this HMCStep
@@ -31,12 +29,8 @@ class HMCStep(MultiStep):
         find_mode : bool
             whether to start the chain at the local minima of the distribution
         verbose : int
-        tally : bool
-    
-        Returns
-        -------
-            None  : None 
-        """
+        tally : bool"""
+    def __init__(self, stochastics,step_count = 6, trajectory_length = 2., covariance = None, find_mode = True, verbose = 0, tally = True  ):
         MultiStep.__init__(self, stochastics, verbose, tally)
         
         if find_mode:
@@ -46,7 +40,7 @@ class HMCStep(MultiStep):
         if covariance is None:
             if find_mode:
                 covariance  = inv_hessian
-            else 
+            else :
                 raise ValueError("can't estimate covariance without finding the mode")
             
         self.covariance = covariance
