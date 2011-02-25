@@ -27,7 +27,7 @@ class HMCStep(MultiStep):
         covariance : (ndim , ndim) ndarray (where ndim is the total number of variables)
             covariance matrix for the HMC sampler to use. If None then will be estimated using the inverse hessian at the mode
         find_mode : bool
-            whether to start the chain at the local minima of the distribution
+            whether to start the chain at the local minima of the distribution. If false, will start the simulation from the initial values of the stochastics
         verbose : int
         tally : bool"""
     def __init__(self, stochastics,step_count = 6, trajectory_length = 2., covariance = None, find_mode = True, verbose = 0, tally = True  ):
@@ -58,16 +58,18 @@ class HMCStep(MultiStep):
         p = np.random.multivariate_normal(mean = self.zero ,cov = self.inv_covariance)
         start_p = p
         
-        p = p - (self.step_size/2) * (-self.gradients_vector)
+        #use the leapfrog method
+        
+        p = p - (self.step_size/2) * (-self.gradients_vector) # half momentum update
         
         for i in range(self.step_count): 
-            
+            #alternate full variable and momentum updates
             self.consider(self.vector + self.step_size * np.dot(self.covariance, p))
             
             if i != self.step_count - 1:
                 p = p - self.step_size * (-self.gradients_vector)
              
-        p = p - (self.step_size/2) * (-self.gradients_vector)   
+        p = p - (self.step_size/2) * (-self.gradients_vector)   # do a half step momentum update to finish off
         
         p = -p 
             
