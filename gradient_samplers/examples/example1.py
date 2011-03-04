@@ -5,12 +5,25 @@ Created on Feb 14, 2011
 '''
 import pymc as pm
 import gradient_samplers as gs
+import numpy as np 
 
-x = pm.Normal('x', mu = 0.0, tau = 10.0**-2, size = 3)
-y = pm.Normal('y', mu = 0.0, tau = .1**-2, size = 1)
+sd = np.arange(-3,3, .2)
+r = pm.Normal('x', mu = 0.0, tau = (10**sd)**-2)
 
-model = (x,y)
+
+data = 
+y = 
+model = (x,)
 
 M = pm.MCMC(model)
-M.use_step_method(gs.HMCStep, model)
-M.isample(iter=2000, burn=0, thin=1)
+M.use_step_method(gs.HMCStep, model, step_size_scaling = .15, trajectory_length = 2)
+M.isample(iter=500, burn=0, thin=1)
+
+acceptance = M.trace('HMC' + '_acceptr' )()
+print np.mean(acceptance)
+import pylab 
+pylab.plot(acceptance)
+pylab.show()
+
+#gs.show_samples(gs.plot,x.trace())
+gs.show_samples(gs.plot,x.trace())
