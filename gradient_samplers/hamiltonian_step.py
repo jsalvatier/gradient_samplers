@@ -7,23 +7,24 @@ import numpy as np
 import pymc as pm
 from multistep import MultiStep
 import find_mode as fm
+import approx_hess as ah
 
 __all__ = ['HMCStep']
 
 class HMCStep(MultiStep):
     """
-    Hamiltonian MCMC/Hybrid Monte Carlo (HMC) step method. Works well on continuous variables for which
+    Hamiltonian/Hybrid Monte-Carlo (HMC) step method. Works well on continuous variables for which
     the gradient of the log posterior can be calculated.
     
-    Based off Radford's review paper of the subject 
-    (http://www.cs.utoronto.ca/~radford/ham-mcmc.abstract.html)
+    Based off Radford's review paper of the subject.
     
     Parameters
     ----------
     stochastics : single or iterable of stochastics
         the stochastics that should use this HMCStep
     step_size_scaling : float
-        a scaling factor for the step sizes
+        a scaling factor for the step sizes. If more than 1 value then treated as an interval to
+        randomize between.
     trajectory_length : float
         (roughly) how far each HMC step should travel (think in terms of standard deviations)
     covariance : (ndim , ndim) ndarray (where ndim is the total number of variables)
@@ -47,7 +48,7 @@ class HMCStep(MultiStep):
          instability, try a smaller step size. Think of this as low acceptance in certain 
          areas. This is a sign that the sampler may give misleading results for small sample
          numbers in the areas with different stability limits (often the tails), so don't 
-         ignore this if you care about those areas.
+         ignore this if you care about those areas. Randomizing the step size may help.
      * See section 4.2 of Radford's paper for more advice.
      
     Relevant Literature: 
@@ -65,26 +66,33 @@ class HMCStep(MultiStep):
         self._id = 'HMC'
         
         if find_mode:
-            _, inv_hessian = fm.find_mode(self)
-            self.accept()
-        
+            fm.find_mode(self)
+
         if covariance is None:
-            if find_mode:
-                covariance  = inv_hessian
-            else :
-                raise ValueError("can't estimate covariance without finding the mode")
-            
-        self.covariance = covariance
-        self.inv_covariance = np.linalg.inv(covariance)
-        self.step_size = step_size_scaling * self.dimensions**(1/4.)
+            self.inv_covariance = ah.approx_hess(self)
+            self.covariance = np.linalg.inv(self.inv_covariance) 
+        else :
+            self.covariance = covariance
+            self.inv_covariance = np.linalg.inv(covariance)
         
-        self.step_count = int(np.floor(trajectory_length / self.step_size))
+        step_size = step_size_scaling * self.dimensions**(1/4.)
+        
+        if np.size(step_size) > 1:
+            self.step_size_max, self.step_size_min = step_size
+        else :
+            self.step_size_max = self.step_size_min = step_size 
+        
+        self.trajectory_length = trajectory_length   
         self.zero = np.zeros(self.dimensions)
         
     
     acceptr = 0.
     
     def step(self):
+        #randomize step size
+        step_size = np.random.uniform(self.step_size_min, self.step_size_max)
+        step_count = int(np.floor(self.trajectory_length / step_size))
+        
         start_logp = self.logp_plus_loglike
         
         # momentum scale proportional to inverse of parameter scale (basically sqrt(covariance))
@@ -92,16 +100,16 @@ class HMCStep(MultiStep):
         start_p = p
         
         #use the leapfrog method
-        p = p - (self.step_size/2) * (-self.gradients_vector) # half momentum update
+        p = p - (step_size/2) * (-self.gradients_vector) # half momentum update
         
-        for i in range(self.step_count): 
+        for i in range(step_count): 
             #alternate full variable and momentum updates
-            self.consider(self.vector + self.step_size * np.dot(self.covariance, p))
+            self.consider(self.vector + step_size * np.dot(self.covariance, p))
             
-            if i != self.step_count - 1:
-                p = p - self.step_size * (-self.gradients_vector)
+            if i != step_count - 1:
+                p = p - step_size * (-self.gradients_vector)
              
-        p = p - (self.step_size/2) * (-self.gradients_vector)   # do a half step momentum update to finish off
+        p = p - (step_size/2) * (-self.gradients_vector)   # do a half step momentum update to finish off
         
         p = -p 
             
@@ -117,8 +125,6 @@ class HMCStep(MultiStep):
                 self.accept()
             else: 
                 self.reject() 
-                
-            a = 0
                 
         except pm.ZeroProbability:
             self.reject()     

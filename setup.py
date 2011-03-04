@@ -36,5 +36,5 @@ if __name__ == "__main__":
         long_description = LONG_DESCRIPTION,
         packages = ['gradient_samplers'], 
         classifiers =classifiers,
-        install_requires=['pymc', 'numpy','scipy'])
+        install_requires=['pymc', 'numpy','scipy', 'numdifftools'])
 

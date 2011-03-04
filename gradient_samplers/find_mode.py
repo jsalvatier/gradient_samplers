@@ -9,7 +9,7 @@ from scipy.optimize import fmin_bfgs, fmin_ncg
 
 __all__ = ['find_mode']
 
-def find_mode(step_method, disp = True):
+def find_mode(step_method, disp = False):
     def logp(x):
         step_method.consider(x) 
         try:
@@ -30,6 +30,5 @@ def find_mode(step_method, disp = True):
     
     #fmin_ncg(logp, step_method.vector, grad_logp, disp = disp)
     
-    results = fmin_bfgs(logp, step_method.vector, grad_logp, disp = True, full_output = True)
-    
-    return results[0], results[3]
+    fmin_bfgs(logp, step_method.vector, grad_logp, disp = disp)
+    step_method.accept() 

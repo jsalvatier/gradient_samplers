@@ -38,16 +38,15 @@ h = pymc.Normal('h', mu = a  * Re ** b, tau = sd **-2, value = h_measured, obser
 
 model = (sd, a, b)
 
-
 #fit
-M = pymc.MCMC(model)
-M.use_step_method(gs.HMCStep, model, step_size_scaling = .2) #compare to without HMCStep
-M.isample(iter=100, burn=0, thin=1)
 
-acceptance = M.trace('HMC' + '_acceptance' )()
+M = pymc.MCMC(model)
+M.use_step_method(gs.HMCStep, model, step_size_scaling = .3) #compare to without HMCStep
+M.isample(iter=1000, burn=0, thin=1)
+
+acceptance = M.trace('HMC' + '_acceptr' )()
 print mean(acceptance)
-import pylab 
-pylab.plot(acceptance)
+
 #plot
 gs.show_samples(gs.plot,a.trace())
 gs.show_samples(gs.plot,b.trace())
