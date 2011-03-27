@@ -70,7 +70,10 @@ class HMCStep(MultiStep):
 
         if covariance is None:
             self.inv_covariance = ah.approx_hess(self)
-            self.covariance = np.linalg.inv(self.inv_covariance) 
+            try : 
+                self.covariance = np.linalg.inv(self.inv_covariance) 
+            except np.linalg.LinAlgError: 
+                raise ValueError("singular inverse covariance matrix estimated numerically check your calculations. inverse covariance = " + str( self.inv_covariance))
         else :
             self.covariance = covariance
             self.inv_covariance = np.linalg.inv(covariance)
